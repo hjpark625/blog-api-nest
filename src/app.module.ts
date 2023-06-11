@@ -17,7 +17,5 @@ config();
     }),
     AuthModule,
   ],
-  controllers: [],
-  providers: [],
 })
 export class AppModule {}

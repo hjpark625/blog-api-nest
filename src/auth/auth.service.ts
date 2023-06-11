@@ -1,7 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from './auth.schema';
+import type { IDecodedTokenInfoType } from '../dto/auth.dto';
 import { IUserModelType } from '../dto/auth.dto';
+import * as jwt from 'jsonwebtoken';
 
 @Injectable()
 export class AuthService {
@@ -35,17 +37,40 @@ export class AuthService {
 
     return { accessToken, refreshToken, user };
   }
+
   async checkUserAndGenerateToken(email: string, password: string) {
     const user = await this.userModel.findByUserEmail(email);
-    if (!user) throw new Error('존재하지 않는 이메일입니다.');
+    if (!user) throw new HttpException('존재하지 않는 이메일입니다.', HttpStatus.BAD_REQUEST);
 
     const isValidPassword = await user.checkPassword(password);
-    if (!isValidPassword) throw new Error('비밀번호가 일치하지 않습니다.');
+    if (!isValidPassword) throw new HttpException('비밀번호가 일치하지 않습니다.', HttpStatus.UNAUTHORIZED);
 
     const accessToken = user.generateAccessToken();
     const refreshToken = user.generateRefreshToken();
     await this.userModel.findByIdAndUpdate(user._id, { refreshToken });
 
     return { accessToken, refreshToken, user };
+  }
+
+  async checkHeader(header: string) {
+    if (!header) throw new HttpException('헤더가 존재하지 않습니다.', HttpStatus.BAD_REQUEST);
+    const [tokenType, tokenValue] = header.split(' ');
+    if (tokenType !== 'Bearer') throw new HttpException('올바른 헤더 타입이 아닙니다.', HttpStatus.BAD_REQUEST);
+    if (tokenValue == null) throw new HttpException('토큰이 존재하지 않습니다.', HttpStatus.BAD_REQUEST);
+    return tokenValue;
+  }
+
+  async logoutUser(refreshToken: string) {
+    const { _id } = jwt.verify(refreshToken, `${process.env.JWT_SECRET}`) as IDecodedTokenInfoType;
+    const user = await this.userModel.findById({ _id });
+
+    if ((user && user.refreshToken) !== refreshToken) {
+      throw new HttpException('토큰이 일치하지 않거나 잘못된 토큰입니다.', HttpStatus.UNAUTHORIZED);
+    }
+    if (!user) throw new HttpException('존재하지 않는 유저입니다.', HttpStatus.NOT_FOUND);
+
+    user.refreshToken = '';
+    user.save();
+    return HttpStatus.NO_CONTENT;
   }
 }

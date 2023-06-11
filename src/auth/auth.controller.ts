@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Res } from '@nestjs/common';
+import { Body, Controller, HttpException, Post, Res, Headers } from '@nestjs/common';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginInfoDto } from 'src/dto/auth.dto';
@@ -28,8 +28,13 @@ export class AuthController {
       });
       return;
     } catch (err: unknown) {
-      res.status(500).json({ message: `${err}` });
-      return;
+      if (err instanceof HttpException) {
+        res.status(err.getStatus()).json({ message: `${err.getResponse()}` });
+        return;
+      } else {
+        res.status(500).json({ message: `${err}` });
+        return;
+      }
     }
   }
 
@@ -50,12 +55,29 @@ export class AuthController {
       });
       return;
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        res.status(401).json({ message: `${err.message}` });
+      if (err instanceof HttpException) {
+        res.status(err.getStatus()).json({ message: `${err.getResponse()}` });
         return;
       } else {
         res.status(500).json({ message: `${err}` });
         return;
+      }
+    }
+  }
+
+  @Post('logout')
+  async logout(@Headers('Authorization') refreshToken: string, @Res() res: Response) {
+    try {
+      const token = await this.authService.checkHeader(refreshToken);
+      const status = await this.authService.logoutUser(token);
+      res.status(status).send();
+      return;
+    } catch (err: unknown) {
+      if (err instanceof HttpException) {
+        res.status(err.getStatus()).json({ message: `${err.getResponse()}` });
+        return;
+      } else {
+        res.status(500).json({ message: `${err}` });
       }
     }
   }
