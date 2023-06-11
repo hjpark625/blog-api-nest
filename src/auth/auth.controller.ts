@@ -81,4 +81,21 @@ export class AuthController {
       }
     }
   }
+
+  @Post('refresh')
+  async refresh(@Headers('Authorization') header: string, @Res() res: Response) {
+    try {
+      const refreshToken = await this.authService.checkHeader(header);
+      const { access_token } = await this.authService.reissueAccessToken(refreshToken);
+      res.status(200).json({ access_token });
+      return;
+    } catch (err: unknown) {
+      if (err instanceof HttpException) {
+        res.status(err.getStatus()).json({ message: `${err.getResponse()}` });
+        return;
+      } else {
+        res.status(500).json({ message: `${err}` });
+      }
+    }
+  }
 }

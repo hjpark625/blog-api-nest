@@ -73,4 +73,16 @@ export class AuthService {
     user.save();
     return HttpStatus.NO_CONTENT;
   }
+
+  async reissueAccessToken(refreshToken: string) {
+    const { _id } = jwt.verify(refreshToken, `${process.env.JWT_SECRET}`) as IDecodedTokenInfoType;
+    const user = await this.userModel.findById({ _id });
+
+    if (user && user.refreshToken === refreshToken) {
+      const access_token = user.generateAccessToken();
+      return { access_token };
+    } else {
+      throw new HttpException('토큰이 일치하지 않거나 잘못된 토큰입니다.', HttpStatus.BAD_REQUEST);
+    }
+  }
 }
