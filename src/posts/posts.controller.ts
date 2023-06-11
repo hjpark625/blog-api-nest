@@ -3,7 +3,8 @@ import { Response } from 'express';
 import { PostsService } from './posts.service';
 import { JsonWebTokenError } from 'jsonwebtoken';
 import { IPostsSchemaType } from '../dto/posts.dto';
-import { ObjectId } from 'mongoose';
+import { ObjectId, Error } from 'mongoose';
+import type { IDecodedTokenInfoType } from 'src/dto/auth.dto';
 
 @Controller('posts')
 export class PostsController {
@@ -111,6 +112,31 @@ export class PostsController {
     } catch (err: unknown) {
       if (err instanceof JsonWebTokenError) {
         res.status(401).json({ message: '토큰이 만료되었습니다.' });
+      }
+      if (err instanceof HttpException) {
+        res.status(err.getStatus()).json({ message: err.getResponse() });
+      }
+    }
+  }
+
+  @Get('user/:userId')
+  async getPostByUserId(
+    @Headers('Authorization') header: string,
+    @Res() res: Response,
+    @Param('userId') userId: ObjectId,
+  ) {
+    try {
+      const decoded = await this.postsService.checkHeader(header);
+      const { _id } = decoded as IDecodedTokenInfoType;
+      const { posts, postsCount } = await this.postsService.getPostsByUserId(userId, _id);
+      res.status(200).json({ data: posts, totalCount: postsCount });
+      return;
+    } catch (err: unknown) {
+      if (err instanceof JsonWebTokenError) {
+        res.status(401).json({ message: '토큰이 만료되었습니다.' });
+      }
+      if (err instanceof Error.CastError) {
+        res.status(404).json({ message: '존재하지 않는 유저입니다.' });
       }
       if (err instanceof HttpException) {
         res.status(err.getStatus()).json({ message: err.getResponse() });

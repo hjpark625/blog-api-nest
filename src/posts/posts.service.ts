@@ -79,4 +79,13 @@ export class PostsService {
     const updatedPost = await this.postsModel.findById(postId).exec();
     return updatedPost;
   }
+
+  async getPostsByUserId(userId: ObjectId, decodedId: ObjectId) {
+    if (userId !== decodedId) {
+      throw new HttpException('아이디가 일치하지 않습니다.', HttpStatus.FORBIDDEN);
+    }
+    const posts = await this.postsModel.find({ 'user._id': userId }).sort({ createdAt: -1 }).exec();
+    const postsCount = await this.postsModel.countDocuments().exec();
+    return { posts, postsCount };
+  }
 }
