@@ -2,9 +2,9 @@ import { Body, Controller, HttpException, Get, Post, Res, Headers, Query, Param,
 import { Response } from 'express';
 import { ObjectId, Error } from 'mongoose';
 import { JsonWebTokenError } from 'jsonwebtoken';
-import { PostsService } from './posts.service';
-import { IPostsSchemaType } from '../dto/posts.dto';
-import type { IDecodedTokenInfoType } from '../dto/auth.dto';
+import { PostsService } from '@/posts/posts.service';
+import { IPostsSchemaType } from '@/dto/posts.dto';
+import type { IDecodedTokenInfoType } from '@/dto/auth.dto';
 
 @Controller('posts')
 export class PostsController {

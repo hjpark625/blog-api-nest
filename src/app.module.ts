@@ -2,9 +2,9 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { config } from 'dotenv';
 import type { MongooseModuleOptions } from '@nestjs/mongoose';
-import { AuthModule } from './auth/auth.module';
-import { PostsModule } from './posts/posts.module';
-import { ImagesModule } from './images/images.module';
+import { AuthModule } from '@/auth/auth.module';
+import { PostsModule } from '@/posts/posts.module';
+import { ImagesModule } from '@/images/images.module';
 
 config();
 

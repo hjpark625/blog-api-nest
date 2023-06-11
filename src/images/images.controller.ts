@@ -2,8 +2,8 @@ import { Controller, Post, UseInterceptors, UploadedFiles, Res, Headers, HttpExc
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 import { config } from 'dotenv';
-import { ImagesService } from './images.service';
-import type { IDecodedTokenInfoType } from '../dto/auth.dto';
+import { ImagesService } from '@/images/images.service';
+import type { IDecodedTokenInfoType } from '@/dto/auth.dto';
 
 config();
 

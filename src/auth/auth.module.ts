@@ -3,9 +3,9 @@ import { MongooseModule } from '@nestjs/mongoose';
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
 import type { ObjectId } from 'mongoose';
-import { User, UserSchema } from './auth.schema';
-import { AuthController } from './auth.controller';
-import { AuthService } from './auth.service';
+import { User, UserSchema } from '@/auth/auth.schema';
+import { AuthController } from '@/auth/auth.controller';
+import { AuthService } from '@/auth/auth.service';
 
 @Module({
   imports: [

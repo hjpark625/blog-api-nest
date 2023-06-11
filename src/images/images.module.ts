@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { ImagesService } from './images.service';
-import { ImagesController } from './images.controller';
+import { ImagesService } from '@/images/images.service';
+import { ImagesController } from '@/images/images.controller';
 
 @Module({
   imports: [],

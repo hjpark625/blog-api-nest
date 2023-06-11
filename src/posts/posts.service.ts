@@ -2,11 +2,11 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import * as jwt from 'jsonwebtoken';
 import { config } from 'dotenv';
 import { InjectModel } from '@nestjs/mongoose';
-import { Posts } from './posts.schema';
-import { IPostsModelType } from '../dto/posts.dto';
-import type { IPostsSchemaType } from '../dto/posts.dto';
+import { Posts } from '@/posts/posts.schema';
+import { IPostsModelType } from '@/dto/posts.dto';
+import type { IPostsSchemaType } from '@/dto/posts.dto';
 import type { ObjectId } from 'mongoose';
-import type { IDecodedTokenInfoType } from '../dto/auth.dto';
+import type { IDecodedTokenInfoType } from '@/dto/auth.dto';
 
 config();
 
