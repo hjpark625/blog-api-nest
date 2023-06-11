@@ -1,4 +1,4 @@
-import type { ObjectId } from 'mongoose';
+import type { Model, ObjectId } from 'mongoose';
 
 export interface IImageFileType {
   filename: string;
@@ -16,3 +16,5 @@ export interface IPostsSchemaType {
     nickname: string;
   };
 }
+
+export type IPostsModelType = Model<IPostsSchemaType, object, object>;
