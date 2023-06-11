@@ -7,6 +7,11 @@ export class RegisterInfoDto {
   password!: string;
 }
 
+export class LoginInfoDto {
+  email!: string;
+  password!: string;
+}
+
 export class UserSchemaDto {
   email!: string;
   nickname!: string;

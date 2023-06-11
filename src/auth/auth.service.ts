@@ -35,4 +35,17 @@ export class AuthService {
 
     return { accessToken, refreshToken, user };
   }
+  async checkUserAndGenerateToken(email: string, password: string) {
+    const user = await this.userModel.findByUserEmail(email);
+    if (!user) throw new Error('존재하지 않는 이메일입니다.');
+
+    const isValidPassword = await user.checkPassword(password);
+    if (!isValidPassword) throw new Error('비밀번호가 일치하지 않습니다.');
+
+    const accessToken = user.generateAccessToken();
+    const refreshToken = user.generateRefreshToken();
+    await this.userModel.findByIdAndUpdate(user._id, { refreshToken });
+
+    return { accessToken, refreshToken, user };
+  }
 }
