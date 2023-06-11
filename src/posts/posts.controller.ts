@@ -2,10 +2,12 @@ import { Body, Controller, HttpException, Get, Post, Res, Headers, Query } from 
 import { Response } from 'express';
 import { PostsService } from './posts.service';
 import { JsonWebTokenError } from 'jsonwebtoken';
+import { IPostsSchemaType } from '../dto/posts.dto';
 
 @Controller('posts')
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
+
   @Get()
   async getPosts(
     @Headers('Authorization') header: string,
@@ -32,6 +34,25 @@ export class PostsController {
       }
       if (error instanceof HttpException) {
         res.status(error.getStatus()).json(error.getResponse());
+      }
+    }
+  }
+
+  @Post()
+  async createPost(@Headers('Authorization') header: string, @Body() payload: IPostsSchemaType, @Res() res: Response) {
+    try {
+      const { title, body, images } = payload;
+      const decoded = await this.postsService.checkHeader(header);
+
+      const result = await this.postsService.createPost(title, body, images, decoded);
+      res.status(201).json(result);
+      return;
+    } catch (err: unknown) {
+      if (err instanceof JsonWebTokenError) {
+        res.status(401).json({ message: '토큰이 만료되었습니다.' });
+      }
+      if (err instanceof HttpException) {
+        res.status(err.getStatus()).json(err.getResponse());
       }
     }
   }

@@ -3,7 +3,9 @@ import * as jwt from 'jsonwebtoken';
 import { config } from 'dotenv';
 import { Posts } from './posts.schema';
 import { InjectModel } from '@nestjs/mongoose';
+import type { IPostsSchemaType } from '../dto/posts.dto';
 import { IPostsModelType } from '../dto/posts.dto';
+import type { IDecodedTokenInfoType } from 'src/dto/auth.dto';
 
 config();
 
@@ -18,8 +20,8 @@ export class PostsService {
     if (tokenType !== 'Bearer') {
       throw new HttpException('올바른 헤더 타입이 아닙니다.', HttpStatus.BAD_REQUEST);
     }
-    jwt.verify(tokenValue, process.env.JWT_SECRET);
-    return;
+    const decoded = jwt.verify(tokenValue, process.env.JWT_SECRET);
+    return decoded;
   }
 
   async getPostsLists(page: string, limit: string) {
@@ -34,5 +36,24 @@ export class PostsService {
     const postsCount = await this.postsModel.countDocuments().exec();
 
     return { posts, postsCount };
+  }
+
+  async createPost(title: string, body: string, images: IPostsSchemaType['images'], info: jwt.JwtPayload | string) {
+    const { _id, nickname } = info as IDecodedTokenInfoType;
+    if (!title || !body) {
+      throw new HttpException('제목과 내용을 입력해주세요.', HttpStatus.BAD_REQUEST);
+    }
+
+    const post = new this.postsModel({
+      title,
+      body,
+      images: images ? images : [],
+      user: {
+        _id,
+        nickname,
+      },
+    });
+    await post.save();
+    return { post };
   }
 }
