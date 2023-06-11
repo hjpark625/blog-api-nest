@@ -1,8 +1,9 @@
-import { Body, Controller, HttpException, Get, Post, Res, Headers, Query } from '@nestjs/common';
+import { Body, Controller, HttpException, Get, Post, Res, Headers, Query, Param, Delete } from '@nestjs/common';
 import { Response } from 'express';
 import { PostsService } from './posts.service';
 import { JsonWebTokenError } from 'jsonwebtoken';
 import { IPostsSchemaType } from '../dto/posts.dto';
+import { ObjectId } from 'mongoose';
 
 @Controller('posts')
 export class PostsController {
@@ -46,6 +47,44 @@ export class PostsController {
 
       const result = await this.postsService.createPost(title, body, images, decoded);
       res.status(201).json(result);
+      return;
+    } catch (err: unknown) {
+      if (err instanceof JsonWebTokenError) {
+        res.status(401).json({ message: '토큰이 만료되었습니다.' });
+      }
+      if (err instanceof HttpException) {
+        res.status(err.getStatus()).json(err.getResponse());
+      }
+    }
+  }
+
+  @Get(':postId')
+  async getPostById(@Headers('Authorization') header: string, @Res() res: Response, @Param('postId') postId: ObjectId) {
+    try {
+      await this.postsService.checkHeader(header);
+      const post = await this.postsService.getPostById(postId);
+      res.status(200).json(post);
+      return;
+    } catch (err: unknown) {
+      if (err instanceof JsonWebTokenError) {
+        res.status(401).json({ message: '토큰이 만료되었습니다.' });
+      }
+      if (err instanceof HttpException) {
+        res.status(err.getStatus()).json(err.getResponse());
+      }
+    }
+  }
+
+  @Delete(':postId')
+  async deletePostById(
+    @Headers('Authorization') header: string,
+    @Res() res: Response,
+    @Param('postId') postId: ObjectId,
+  ) {
+    try {
+      await this.postsService.checkHeader(header);
+      await this.postsService.deletePostById(postId);
+      res.status(204).send();
       return;
     } catch (err: unknown) {
       if (err instanceof JsonWebTokenError) {

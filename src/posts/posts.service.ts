@@ -6,6 +6,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import type { IPostsSchemaType } from '../dto/posts.dto';
 import { IPostsModelType } from '../dto/posts.dto';
 import type { IDecodedTokenInfoType } from 'src/dto/auth.dto';
+import type { ObjectId } from 'mongoose';
 
 config();
 
@@ -54,6 +55,18 @@ export class PostsService {
       },
     });
     await post.save();
-    return { post };
+    return post;
+  }
+
+  async getPostById(postId: ObjectId) {
+    const post = await this.postsModel.findById(postId).exec();
+    if (!post) {
+      throw new HttpException('게시글이 존재하지 않습니다.', HttpStatus.NOT_FOUND);
+    }
+    return post;
+  }
+
+  async deletePostById(postId: ObjectId) {
+    await this.postsModel.findByIdAndDelete(postId).exec();
   }
 }
