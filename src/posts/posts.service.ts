@@ -69,4 +69,14 @@ export class PostsService {
   async deletePostById(postId: ObjectId) {
     await this.postsModel.findByIdAndDelete(postId).exec();
   }
+
+  async updatePostById(contents: Pick<IPostsSchemaType, 'title' | 'body' | 'images'>, postId: ObjectId) {
+    const { title, body, images } = contents;
+    const post = await this.postsModel.findByIdAndUpdate(postId, { title, body, images, updatedAt: Date.now() }).exec();
+    if (!post) {
+      throw new HttpException('게시글이 존재하지 않습니다.', HttpStatus.NOT_FOUND);
+    }
+    const updatedPost = await this.postsModel.findById(postId).exec();
+    return updatedPost;
+  }
 }

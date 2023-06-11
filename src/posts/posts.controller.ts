@@ -1,4 +1,4 @@
-import { Body, Controller, HttpException, Get, Post, Res, Headers, Query, Param, Delete } from '@nestjs/common';
+import { Body, Controller, HttpException, Get, Post, Res, Headers, Query, Param, Delete, Patch } from '@nestjs/common';
 import { Response } from 'express';
 import { PostsService } from './posts.service';
 import { JsonWebTokenError } from 'jsonwebtoken';
@@ -34,7 +34,7 @@ export class PostsController {
         res.status(401).json({ message: '토큰이 만료되었습니다.' });
       }
       if (error instanceof HttpException) {
-        res.status(error.getStatus()).json(error.getResponse());
+        res.status(error.getStatus()).json({ message: error.getResponse() });
       }
     }
   }
@@ -53,7 +53,7 @@ export class PostsController {
         res.status(401).json({ message: '토큰이 만료되었습니다.' });
       }
       if (err instanceof HttpException) {
-        res.status(err.getStatus()).json(err.getResponse());
+        res.status(err.getStatus()).json({ message: err.getResponse() });
       }
     }
   }
@@ -70,7 +70,7 @@ export class PostsController {
         res.status(401).json({ message: '토큰이 만료되었습니다.' });
       }
       if (err instanceof HttpException) {
-        res.status(err.getStatus()).json(err.getResponse());
+        res.status(err.getStatus()).json({ message: err.getResponse() });
       }
     }
   }
@@ -91,7 +91,29 @@ export class PostsController {
         res.status(401).json({ message: '토큰이 만료되었습니다.' });
       }
       if (err instanceof HttpException) {
-        res.status(err.getStatus()).json(err.getResponse());
+        res.status(err.getStatus()).json({ message: err.getResponse() });
+      }
+    }
+  }
+
+  @Patch(':postId')
+  async updatePost(
+    @Headers('Authorization') header: string,
+    @Res() res: Response,
+    @Body() payload: IPostsSchemaType,
+    @Param('postId') postId: ObjectId,
+  ) {
+    try {
+      await this.postsService.checkHeader(header);
+      const result = await this.postsService.updatePostById(payload, postId);
+      res.status(200).json(result);
+      return;
+    } catch (err: unknown) {
+      if (err instanceof JsonWebTokenError) {
+        res.status(401).json({ message: '토큰이 만료되었습니다.' });
+      }
+      if (err instanceof HttpException) {
+        res.status(err.getStatus()).json({ message: err.getResponse() });
       }
     }
   }
