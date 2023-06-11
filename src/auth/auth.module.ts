@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { User, UserSchema } from './auth.schema';
-import type mongoose from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
+import type { ObjectId } from 'mongoose';
+import { User, UserSchema } from './auth.schema';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 
@@ -41,7 +41,7 @@ import { AuthService } from './auth.service';
           schema.methods.generateAccessToken = function () {
             const accessToken = jwt.sign(
               {
-                _id: this._id as mongoose.ObjectId,
+                _id: this._id as ObjectId,
                 nickname: this.nickname,
               },
               `${process.env.JWT_SECRET}`,
@@ -53,7 +53,7 @@ import { AuthService } from './auth.service';
           schema.methods.generateRefreshToken = function () {
             const refreshToken = jwt.sign(
               {
-                _id: this._id as mongoose.ObjectId,
+                _id: this._id as ObjectId,
                 nickname: this.nickname,
                 email: this.email,
                 password: this.hashedPassword,

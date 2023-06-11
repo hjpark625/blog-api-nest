@@ -1,9 +1,9 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import * as jwt from 'jsonwebtoken';
 import { User } from './auth.schema';
 import type { IDecodedTokenInfoType } from '../dto/auth.dto';
 import { IUserModelType } from '../dto/auth.dto';
-import * as jwt from 'jsonwebtoken';
 
 @Injectable()
 export class AuthService {
