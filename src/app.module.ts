@@ -4,6 +4,7 @@ import { config } from 'dotenv';
 import type { MongooseModuleOptions } from '@nestjs/mongoose';
 import { AuthModule } from './auth/auth.module';
 import { PostsModule } from './posts/posts.module';
+import { ImagesModule } from './images/images.module';
 
 config();
 
@@ -18,6 +19,7 @@ config();
     }),
     AuthModule,
     PostsModule,
+    ImagesModule,
   ],
 })
 export class AppModule {}
