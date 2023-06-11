@@ -1,10 +1,10 @@
 import { Body, Controller, HttpException, Get, Post, Res, Headers, Query, Param, Delete, Patch } from '@nestjs/common';
 import { Response } from 'express';
-import { PostsService } from './posts.service';
-import { JsonWebTokenError } from 'jsonwebtoken';
-import { IPostsSchemaType } from '../dto/posts.dto';
 import { ObjectId, Error } from 'mongoose';
-import type { IDecodedTokenInfoType } from 'src/dto/auth.dto';
+import { JsonWebTokenError } from 'jsonwebtoken';
+import { PostsService } from './posts.service';
+import { IPostsSchemaType } from '../dto/posts.dto';
+import type { IDecodedTokenInfoType } from '../dto/auth.dto';
 
 @Controller('posts')
 export class PostsController {
