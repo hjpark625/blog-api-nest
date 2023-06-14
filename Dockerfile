@@ -18,5 +18,7 @@ RUN yarn install
 COPY . .
 RUN yarn build
 
+RUN rm -rf src tsconfig.json tsconfig.build.json
+
 EXPOSE 4000
 ENTRYPOINT ["yarn", "start:prod"]
