@@ -15,15 +15,24 @@ export class ImagesService {
   });
 
   async checkHeader(header: string) {
-    if (!header) {
-      throw new HttpException('헤더가 존재하지 않습니다.', HttpStatus.BAD_REQUEST);
+    try {
+      if (!header) {
+        throw new HttpException('헤더가 존재하지 않습니다.', HttpStatus.BAD_REQUEST);
+      }
+      const [tokenType, tokenValue] = header.split(' ');
+      if (tokenType !== 'Bearer') {
+        throw new HttpException('올바른 헤더 타입이 아닙니다.', HttpStatus.BAD_REQUEST);
+      }
+      const decoded = jwt.verify(tokenValue, process.env.JWT_SECRET);
+      return decoded;
+    } catch (err: unknown) {
+      if (err instanceof HttpException) {
+        throw new HttpException(err.getResponse(), err.getStatus());
+      }
+      if (err instanceof jwt.JsonWebTokenError) {
+        throw new HttpException(err.message, HttpStatus.UNAUTHORIZED);
+      }
     }
-    const [tokenType, tokenValue] = header.split(' ');
-    if (tokenType !== 'Bearer') {
-      throw new HttpException('올바른 헤더 타입이 아닙니다.', HttpStatus.BAD_REQUEST);
-    }
-    const decoded = jwt.verify(tokenValue, process.env.JWT_SECRET);
-    return decoded;
   }
 
   // TODO: S3 에러 핸들링 최적화 필요

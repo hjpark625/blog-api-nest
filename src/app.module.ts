@@ -1,3 +1,4 @@
+import type { MiddlewareConsumer } from '@nestjs/common';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -5,6 +6,7 @@ import type { MongooseModuleFactoryOptions } from '@nestjs/mongoose';
 import { AuthModule } from '@/auth/auth.module';
 import { PostsModule } from '@/posts/posts.module';
 import { ImagesModule } from '@/images/images.module';
+import { LoggingMiddleware } from './middleware/logging.middleware';
 
 @Module({
   imports: [
@@ -29,4 +31,8 @@ import { ImagesModule } from '@/images/images.module';
     ImagesModule,
   ],
 })
-export class AppModule {}
+export class AppModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggingMiddleware).forRoutes('*');
+  }
+}

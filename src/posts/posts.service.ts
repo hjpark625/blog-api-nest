@@ -11,15 +11,24 @@ import type { IDecodedTokenInfoType } from '@/dto/auth.dto';
 export class PostsService {
   constructor(@InjectModel(Posts.name) private postsModel: IPostsModelType) {}
   async checkHeader(header: string) {
-    if (!header) {
-      throw new HttpException('헤더가 존재하지 않습니다.', HttpStatus.BAD_REQUEST);
+    try {
+      if (!header) {
+        throw new HttpException('헤더가 존재하지 않습니다.', HttpStatus.BAD_REQUEST);
+      }
+      const [tokenType, tokenValue] = header.split(' ');
+      if (tokenType !== 'Bearer') {
+        throw new HttpException('올바른 헤더 타입이 아닙니다.', HttpStatus.BAD_REQUEST);
+      }
+      const decoded = jwt.verify(tokenValue, process.env.JWT_SECRET);
+      return decoded;
+    } catch (err: unknown) {
+      if (err instanceof HttpException) {
+        throw new HttpException(err.getResponse(), err.getStatus());
+      }
+      if (err instanceof jwt.JsonWebTokenError) {
+        throw new HttpException(err.message, HttpStatus.UNAUTHORIZED);
+      }
     }
-    const [tokenType, tokenValue] = header.split(' ');
-    if (tokenType !== 'Bearer') {
-      throw new HttpException('올바른 헤더 타입이 아닙니다.', HttpStatus.BAD_REQUEST);
-    }
-    const decoded = jwt.verify(tokenValue, process.env.JWT_SECRET);
-    return decoded;
   }
 
   async getPostsLists(page: string, limit: string) {
@@ -82,7 +91,7 @@ export class PostsService {
       throw new HttpException('아이디가 일치하지 않습니다.', HttpStatus.FORBIDDEN);
     }
     const posts = await this.postsModel.find({ 'user._id': userId }).sort({ createdAt: -1 }).exec();
-    const postsCount = await this.postsModel.countDocuments().exec();
+    const postsCount = posts.length;
     return { posts, postsCount };
   }
 }
