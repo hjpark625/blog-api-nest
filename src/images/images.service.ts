@@ -1,11 +1,8 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { config } from 'dotenv';
 import * as AWS from 'aws-sdk';
 import * as jwt from 'jsonwebtoken';
 import type { ManagedUpload, PutObjectRequest } from 'aws-sdk/clients/s3';
 import type { ObjectId } from 'mongoose';
-
-config();
 
 @Injectable()
 export class ImagesService {
