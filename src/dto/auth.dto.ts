@@ -1,4 +1,5 @@
 import type { Model, HydratedDocument, ObjectId } from 'mongoose';
+import type { JwtPayload } from 'jsonwebtoken';
 
 export class RegisterInfoDto {
   email!: string;
@@ -32,7 +33,7 @@ export interface IUserModelType extends Model<UserSchemaDto, object, IUserInstan
   findByUserEmail: (email: string) => Promise<HydratedDocument<UserSchemaDto, IUserInstanceType>>;
 }
 
-export interface IDecodedTokenInfoType {
+export interface IDecodedTokenInfoType extends JwtPayload {
   _id: ObjectId;
   email: string;
   nickname: string;
