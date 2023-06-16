@@ -70,6 +70,8 @@ export class ImagesService {
       } catch (err: unknown) {
         if (err instanceof HttpException) {
           throw new HttpException(err.getResponse(), err.getStatus());
+        } else {
+          throw new HttpException(err, HttpStatus.INTERNAL_SERVER_ERROR);
         }
       }
     }
