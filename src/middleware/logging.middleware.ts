@@ -7,12 +7,12 @@ export class LoggingMiddleware implements NestMiddleware {
   private readonly logger = new Logger(LoggingMiddleware.name);
 
   use(req: Request, res: Response, next: NextFunction) {
-    const { ip, method, originalUrl } = req;
+    const { ip, method, originalUrl, hostname } = req;
 
     res.on('finish', () => {
       const { statusCode, statusMessage } = res;
 
-      const logFormat = `${method} | ${statusCode} | ${statusMessage} | ${originalUrl} | ${ip}`;
+      const logFormat = `${method} | ${statusCode} | ${statusMessage} | ${originalUrl} | ${ip} | ${hostname}`;
 
       if (statusCode >= HttpStatus.INTERNAL_SERVER_ERROR) {
         this.logger.error(logFormat);
