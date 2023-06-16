@@ -1,6 +1,14 @@
-import { Controller, Post, UseInterceptors, UploadedFiles, Res, Headers, HttpException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  UseInterceptors,
+  UploadedFiles,
+  Headers,
+  HttpException,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { Response } from 'express';
 import { ImagesService } from '@/images/images.service';
 import type { IDecodedTokenInfoType } from '@/dto/auth.dto';
 
@@ -9,12 +17,9 @@ export class ImagesController {
   constructor(private readonly imagesService: ImagesService) {}
 
   @Post('upload')
+  @HttpCode(HttpStatus.OK)
   @UseInterceptors(FilesInterceptor('files'))
-  async uploadImage(
-    @UploadedFiles() files: Express.Multer.File[],
-    @Headers('Authorization') header: string,
-    @Res() res: Response,
-  ) {
+  async uploadImage(@UploadedFiles() files: Express.Multer.File[], @Headers('Authorization') header: string) {
     try {
       const decoded = await this.imagesService.checkHeader(header);
       const { _id } = decoded as IDecodedTokenInfoType;
@@ -26,12 +31,13 @@ export class ImagesController {
         location: result.Location,
       }));
 
-      res.status(200).json(mappedResults);
+      return { images: mappedResults };
     } catch (err: unknown) {
       if (err instanceof HttpException) {
-        res.status(err.getStatus()).json({ message: err.getResponse() });
+        throw new HttpException({ message: `${err.getResponse()}` }, err.getStatus());
+      } else {
+        throw new HttpException(`${err}`, HttpStatus.INTERNAL_SERVER_ERROR);
       }
-      return err;
     }
   }
 }

@@ -1,11 +1,13 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import * as AWS from 'aws-sdk';
-import * as jwt from 'jsonwebtoken';
+import { JsonWebTokenError } from 'jsonwebtoken';
 import type { ManagedUpload, PutObjectRequest } from 'aws-sdk/clients/s3';
 import type { ObjectId } from 'mongoose';
 
 @Injectable()
 export class ImagesService {
+  constructor(private jwtService: JwtService) {}
   private readonly s3: AWS.S3 = new AWS.S3({
     credentials: {
       accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -23,13 +25,13 @@ export class ImagesService {
       if (tokenType !== 'Bearer') {
         throw new HttpException('올바른 헤더 타입이 아닙니다.', HttpStatus.BAD_REQUEST);
       }
-      const decoded = jwt.verify(tokenValue, process.env.JWT_SECRET);
+      const decoded = this.jwtService.verify(tokenValue);
       return decoded;
     } catch (err: unknown) {
       if (err instanceof HttpException) {
         throw new HttpException(err.getResponse(), err.getStatus());
       }
-      if (err instanceof jwt.JsonWebTokenError) {
+      if (err instanceof JsonWebTokenError) {
         throw new HttpException(err.message, HttpStatus.UNAUTHORIZED);
       }
     }
