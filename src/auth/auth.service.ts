@@ -1,13 +1,31 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import * as jwt from 'jsonwebtoken';
+import { JwtService } from '@nestjs/jwt';
 import { User } from '@/auth/auth.schema';
 import type { IDecodedTokenInfoType } from '@/dto/auth.dto';
 import { IUserModelType } from '@/dto/auth.dto';
 
 @Injectable()
 export class AuthService {
-  constructor(@InjectModel(User.name) private userModel: IUserModelType) {}
+  constructor(@InjectModel(User.name) private userModel: IUserModelType, private jwtService: JwtService) {}
+
+  generateAccessToken(user: User) {
+    const payload = {
+      _id: user._id,
+      nickname: user.nickname,
+    };
+    return this.jwtService.sign(payload, { expiresIn: '30m' });
+  }
+
+  generateRefreshToken(user: User) {
+    const payload = {
+      _id: user._id,
+      nickname: user.nickname,
+      email: user.email,
+      password: user.hashedPassword,
+    };
+    return this.jwtService.sign(payload, { expiresIn: '14d' });
+  }
 
   async checkDuplicatedUser(email: string) {
     const isExistUser = await this.userModel.findByUserEmail(email);
@@ -24,8 +42,8 @@ export class AuthService {
       refreshToken: null,
     });
 
-    const accessToken = user.generateAccessToken();
-    const refreshToken = user.generateRefreshToken();
+    const accessToken = this.generateAccessToken(user.toObject());
+    const refreshToken = this.generateRefreshToken(user.toObject());
 
     await user.setPassword(password);
     await user.save();
@@ -45,8 +63,8 @@ export class AuthService {
     const isValidPassword = await user.checkPassword(password);
     if (!isValidPassword) throw new HttpException('비밀번호가 일치하지 않습니다.', HttpStatus.UNAUTHORIZED);
 
-    const accessToken = user.generateAccessToken();
-    const refreshToken = user.generateRefreshToken();
+    const accessToken = this.generateAccessToken(user.toObject());
+    const refreshToken = this.generateRefreshToken(user.toObject());
     await this.userModel.findByIdAndUpdate(user._id, { refreshToken });
 
     return { accessToken, refreshToken, user };
@@ -61,7 +79,7 @@ export class AuthService {
   }
 
   async logoutUser(refreshToken: string) {
-    const { _id } = jwt.verify(refreshToken, `${process.env.JWT_SECRET}`) as IDecodedTokenInfoType;
+    const { _id } = this.jwtService.verify<IDecodedTokenInfoType>(refreshToken);
     const user = await this.userModel.findById({ _id });
 
     if ((user && user.refreshToken) !== refreshToken) {
@@ -71,15 +89,15 @@ export class AuthService {
 
     user.refreshToken = '';
     user.save();
-    return HttpStatus.NO_CONTENT;
+    return;
   }
 
   async reissueAccessToken(refreshToken: string) {
-    const { _id } = jwt.verify(refreshToken, `${process.env.JWT_SECRET}`) as IDecodedTokenInfoType;
+    const { _id } = this.jwtService.verify<IDecodedTokenInfoType>(refreshToken);
     const user = await this.userModel.findById({ _id });
 
     if (user && user.refreshToken === refreshToken) {
-      const access_token = user.generateAccessToken();
+      const access_token = this.generateAccessToken(user.toObject());
       return { access_token };
     } else {
       throw new HttpException('토큰이 일치하지 않거나 잘못된 토큰입니다.', HttpStatus.BAD_REQUEST);

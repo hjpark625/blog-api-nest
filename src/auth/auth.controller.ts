@@ -1,5 +1,4 @@
-import { Body, Controller, HttpException, Post, Res, Headers } from '@nestjs/common';
-import { Response } from 'express';
+import { Body, Controller, HttpException, Post, Headers, HttpStatus, HttpCode } from '@nestjs/common';
 import { AuthService } from '@/auth/auth.service';
 import { LoginInfoDto, RegisterInfoDto } from '@/dto/auth.dto';
 
@@ -8,92 +7,86 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
-  async register(@Body() body: RegisterInfoDto, @Res() res: Response) {
+  @HttpCode(HttpStatus.CREATED)
+  async register(@Body() body: RegisterInfoDto) {
     const { email, nickname, password } = body;
 
     try {
       const isExistUser = await this.authService.checkDuplicatedUser(email);
       if (isExistUser) {
-        res.status(409).json({ message: '이미 존재하는 이메일입니다.' });
-        return;
+        throw new HttpException('이미 존재하는 이메일입니다.', HttpStatus.CONFLICT);
       }
       const result = await this.authService.saveUserInfoAndGenerateToken(email, nickname, password);
-      res.status(201).json({
+      return {
         user: {
           info: result.user.serialize(),
           access_token: result.accessToken,
           refresh_token: result.refreshToken,
         },
-      });
-      return;
+      };
     } catch (err: unknown) {
       if (err instanceof HttpException) {
-        res.status(err.getStatus()).json({ message: `${err.getResponse()}` });
-        return;
+        throw new HttpException({ message: `${err.getResponse()}` }, err.getStatus());
       } else {
-        res.status(500).json({ message: `${err}` });
-        return;
+        throw new HttpException(`${err}`, HttpStatus.INTERNAL_SERVER_ERROR);
       }
     }
   }
 
   @Post('login')
-  async login(@Body() body: LoginInfoDto, @Res() res: Response) {
+  @HttpCode(HttpStatus.OK)
+  async login(@Body() body: LoginInfoDto) {
     const { email, password } = body;
     if (!email || !password) {
-      res.status(400).json({ message: '이메일과 비밀번호를 입력해주세요.' });
-      return;
+      throw new HttpException('이메일과 비밀번호를 입력해주세요.', HttpStatus.BAD_REQUEST);
     }
 
     try {
       const result = await this.authService.checkUserAndGenerateToken(email, password);
-      res.status(200).json({
-        user: result.user.serialize(),
-        access_token: result.accessToken,
-        refresh_token: result.refreshToken,
-      });
-      return;
+      return {
+        user: {
+          info: result.user.serialize(),
+          access_token: result.accessToken,
+          refresh_token: result.refreshToken,
+        },
+      };
     } catch (err: unknown) {
       if (err instanceof HttpException) {
-        res.status(err.getStatus()).json({ message: `${err.getResponse()}` });
-        return;
+        throw new HttpException({ message: `${err.getResponse()}` }, err.getStatus());
       } else {
-        res.status(500).json({ message: `${err}` });
-        return;
+        throw new HttpException(`${err}`, HttpStatus.INTERNAL_SERVER_ERROR);
       }
     }
   }
 
   @Post('logout')
-  async logout(@Headers('Authorization') refreshToken: string, @Res() res: Response) {
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async logout(@Headers('Authorization') refreshToken: string) {
     try {
       const token = await this.authService.checkHeader(refreshToken);
-      const status = await this.authService.logoutUser(token);
-      res.status(status).send();
+      await this.authService.logoutUser(token);
       return;
     } catch (err: unknown) {
       if (err instanceof HttpException) {
-        res.status(err.getStatus()).json({ message: `${err.getResponse()}` });
-        return;
+        throw new HttpException({ message: `${err.getResponse()}` }, err.getStatus());
       } else {
-        res.status(500).json({ message: `${err}` });
+        throw new HttpException(`${err}`, HttpStatus.INTERNAL_SERVER_ERROR);
       }
     }
   }
 
   @Post('refresh')
-  async refresh(@Headers('Authorization') header: string, @Res() res: Response) {
+  @HttpCode(HttpStatus.OK)
+  async refresh(@Headers('Authorization') header: string) {
     try {
       const refreshToken = await this.authService.checkHeader(header);
       const { access_token } = await this.authService.reissueAccessToken(refreshToken);
-      res.status(200).json({ access_token });
-      return;
+      return { access_token };
     } catch (err: unknown) {
       if (err instanceof HttpException) {
-        res.status(err.getStatus()).json({ message: `${err.getResponse()}` });
-        return;
+        throw new HttpException({ message: `${err.getResponse()}` }, err.getStatus());
       } else {
-        res.status(500).json({ message: `${err}` });
+        throw new HttpException(`${err}`, HttpStatus.INTERNAL_SERVER_ERROR);
       }
     }
   }

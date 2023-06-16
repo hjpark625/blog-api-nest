@@ -1,5 +1,4 @@
 import type { Model, HydratedDocument, ObjectId } from 'mongoose';
-import type { JwtPayload } from 'jsonwebtoken';
 
 export class RegisterInfoDto {
   email!: string;
@@ -26,8 +25,6 @@ export interface IUserInstanceType extends UserSchemaDto {
   setPassword: (password: string) => Promise<void>;
   checkPassword: (password: string) => Promise<boolean>;
   serialize: () => UserSchemaDto;
-  generateAccessToken: () => string;
-  generateRefreshToken: () => string;
   saveRefreshToken: (refreshToken: string) => Promise<void>;
 }
 
@@ -35,7 +32,7 @@ export interface IUserModelType extends Model<UserSchemaDto, object, IUserInstan
   findByUserEmail: (email: string) => Promise<HydratedDocument<UserSchemaDto, IUserInstanceType>>;
 }
 
-export interface IDecodedTokenInfoType extends JwtPayload {
+export interface IDecodedTokenInfoType {
   _id: ObjectId;
   email: string;
   nickname: string;

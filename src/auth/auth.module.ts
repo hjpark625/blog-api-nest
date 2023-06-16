@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { JwtModule } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
 import type { ObjectId } from 'mongoose';
@@ -9,6 +10,12 @@ import { AuthService } from '@/auth/auth.service';
 
 @Module({
   imports: [
+    JwtModule.registerAsync({
+      useFactory: () => ({
+        secret: `${process.env.JWT_SECRET}`,
+        signOptions: { algorithm: 'HS256' },
+      }),
+    }),
     MongooseModule.forFeatureAsync([
       {
         name: User.name,
